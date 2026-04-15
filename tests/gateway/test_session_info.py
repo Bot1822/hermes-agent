@@ -88,6 +88,30 @@ class TestFormatSessionInfo:
             info = runner._format_session_info()
         assert "1.0M" in info
 
+    def test_custom_provider_model_context_length(self, runner, tmp_path):
+        config_yaml = (
+            "model:\n"
+            "  default: gpt-5.4\n"
+            "  provider: zys\n"
+            "custom_providers:\n"
+            "  - name: zys\n"
+            "    base_url: http://example.test/v1\n"
+            "    model: gpt-5.4\n"
+            "    models:\n"
+            "      gpt-5.4:\n"
+            "        context_length: 1050000\n"
+        )
+        p1, p2, p3 = _patch_info(
+            tmp_path,
+            config_yaml,
+            "gpt-5.4",
+            {"provider": "custom", "base_url": "http://example.test/v1", "api_key": "***"},
+        )
+        with p1, p2, p3:
+            info = runner._format_session_info()
+        assert "1.1M" in info
+        assert "config" in info
+
     def test_missing_config(self, runner, tmp_path):
         """No config.yaml should not crash."""
         p1, p2, p3 = _patch_info(tmp_path, None,  # don't create config
